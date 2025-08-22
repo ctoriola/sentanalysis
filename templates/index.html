@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+  <form action="/analyze" method="POST" class="card">
+    <label for="text">Enter text to analyze</label>
+    <textarea id="text" name="text" rows="8" placeholder="Type or paste text here...">{{ original or '' }}</textarea>
+    <button type="submit">Analyze Sentiment</button>
+  </form>
+
+  {% if result %}
+    <div class="card result">
+      <h2>Result</h2>
+      <p><strong>Label:</strong> {{ result.label }}</p>
+      <p><strong>Polarity:</strong> {{ '%.3f'|format(result.polarity) }}</p>
+      <p><strong>Subjectivity:</strong> {{ '%.3f'|format(result.subjectivity) }}</p>
+    </div>
+  {% endif %}
+{% endblock %}

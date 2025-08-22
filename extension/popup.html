@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sentiment Analyzer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <h1>Sentiment Analyzer</h1>
+
+    <label for="input">Text</label>
+    <textarea id="input" rows="6" placeholder="Paste or analyze selection..."></textarea>
+
+    <div class="buttons">
+      <button id="btn-selection">Analyze Selection</button>
+      <button id="btn-analyze">Analyze Input</button>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <div id="result" class="result hidden">
+      <div><strong>Label:</strong> <span id="label">-</span></div>
+      <div><strong>Polarity:</strong> <span id="polarity">-</span></div>
+      <div><strong>Subjectivity:</strong> <span id="subjectivity">-</span></div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

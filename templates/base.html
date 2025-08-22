@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sentiment Analysis Web App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+  <header class="container">
+    <h1>Sentiment Analysis</h1>
+    <p class="subtitle">Analyze the sentiment of any text with TextBlob</p>
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="container footer">
+    <small>API: <code>POST /api/sentiment</code></small>
+  </footer>
+</body>
+</html>
