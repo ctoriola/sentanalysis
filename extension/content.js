@@ -47,6 +47,24 @@
     fab.title = "Analyze sentiment";
     fab.innerHTML = "\uD83D\uDCCA"; // chart icon
 
+    async function inlineAnalyze(text, ev) {
+      try {
+        showTooltipAt((ev?.pageX) || 0, (ev?.pageY) || 0, "Analyzing...");
+        const res = await fetch(PROD_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+        const data = await res.json();
+        const label = data?.sentiment ?? "-";
+        const pol = typeof data?.polarity === "number" ? data.polarity.toFixed(3) : "-";
+        showTooltipAt((ev?.pageX) || 0, (ev?.pageY) || 0, `<strong>Sentiment:</strong> ${label}<br/><strong>Polarity:</strong> ${pol}`);
+      } catch (err) {
+        showTooltipAt((ev?.pageX) || 0, (ev?.pageY) || 0, "Analysis failed.");
+      }
+      setTimeout(hideTooltip, 3000);
+    }
+
     fab.addEventListener("click", async (ev) => {
       // Send the selected or last-captured text to background/popup
       const text = getSelectedText() || currentText;
@@ -58,24 +76,19 @@
         }
         throw new Error("runtime unavailable");
       } catch (e) {
-        // Fallback: call API directly and show a small tooltip result
-        try {
-          showTooltipAt(ev.pageX || 0, ev.pageY || 0, "Analyzing...");
-          const res = await fetch(PROD_API, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text })
-          });
-          const data = await res.json();
-          const label = data?.sentiment ?? "-";
-          const pol = typeof data?.polarity === "number" ? data.polarity.toFixed(3) : "-";
-          showTooltipAt(ev.pageX || 0, ev.pageY || 0, `<strong>Sentiment:</strong> ${label}<br/><strong>Polarity:</strong> ${pol}`);
-        } catch (err) {
-          showTooltipAt(ev.pageX || 0, ev.pageY || 0, "Analysis failed.");
-        }
-        setTimeout(hideTooltip, 3000);
+        // Fallback: inline analyze
+        inlineAnalyze(text, ev);
       }
     });
+
+    // Background fallback: request inline analysis
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
+      chrome.runtime.onMessage.addListener((msg) => {
+        if (msg?.type === "INLINE_ANALYZE" && typeof msg.text === "string") {
+          inlineAnalyze(msg.text);
+        }
+      });
+    }
 
     document.documentElement.appendChild(fab);
     return fab;
