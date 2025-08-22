@@ -1,4 +1,8 @@
-const API_URLS = ["http://127.0.0.1:5000/api/sentiment", "http://localhost:5000/api/sentiment"];
+const API_URLS = [
+  "https://sentanalysis.vercel.app/api/sentiment",
+  "http://127.0.0.1:5000/api/sentiment",
+  "http://localhost:5000/api/sentiment",
+];
 
 async function callApi(text) {
   for (const url of API_URLS) {
