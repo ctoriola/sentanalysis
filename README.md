@@ -6,7 +6,7 @@ A multi-faceted sentiment analysis project with:
 - JSON API (for programmatic use and the browser extension)
 - Chrome extension (Manifest V3) to analyze selected or pasted text
 
-Core analysis uses TextBlob.
+Core analysis uses VADER as the primary analyzer (great for short/social text), with TextBlob as a fallback. The API returns the final label plus polarity/subjectivity.
 
 ## Requirements
 - Python 3.9+
@@ -49,16 +49,29 @@ Response:
 CORS headers are enabled for convenience so the Chrome extension can call the API.
 
 ## Chrome Extension (MV3)
-1. Start the Flask app first (see above).
-2. In Chrome go to chrome://extensions
-3. Enable "Developer mode" (top right)
-4. Click "Load unpacked" and select the `extension/` folder
-5. Pin the extension. Click it to analyze text:
-   - Use "Analyze Selection" to fetch selected text from the current tab
-   - Or paste/enter text and click "Analyze Input"
+You can use the extension in two modes:
+
+- Development (local API): run the Flask app locally, the extension will fall back to `http://127.0.0.1:5000` if production is unreachable.
+- Production (Vercel API): no local server required; the extension tries your deployed API first.
+
+Setup:
+1. In Chrome, go to chrome://extensions
+2. Enable "Developer mode" (top right)
+3. Click "Load unpacked" and select the `extension/` folder
+4. Pin the extension. Use it in any of these ways:
+   - Select text on a page and click the floating blue button that appears near the selection. The popup opens (or a tooltip appears inline) with the analysis.
+   - Or click the extension icon to open the popup, then:
+     - Use "Analyze Selection" to fetch selected text from the current tab
+     - Or paste/enter text and click "Analyze Input"
+
+Notes:
+- The extension is configured to call production first: `https://sentanalysis.vercel.app/api/sentiment`, then fall back to local: `http://127.0.0.1:5000/api/sentiment`.
+- The in-page floating button is injected by `content.js`; if the popup cannot be opened (e.g., on Edge), it shows an inline tooltip result instead.
+- Internal browser pages (chrome://, edge://, about:, extension pages) are restricted. Use the extension on normal sites.
+- After changing any extension files, reload it from chrome://extensions (or edge://extensions).
 
 ## Notes
-- The project uses TextBlob which is simple and effective for general sentiment. You can later swap to VADER or NLTK-based approaches inside `sentiment/core.py`.
+- The project uses VADER primarily, with TextBlob fallback, implemented in `sentiment/core.py`.
 - For production, consider stricter CORS and authentication.
 
 ## Deploy to Vercel (Serverless)
@@ -74,6 +87,15 @@ Steps:
 3. Vercel detects Python, installs `requirements.txt`, and deploys.
 4. After deploy, your app will be available at `https://<your-project>.vercel.app/`.
 
+Verify after deploy:
+- Open your site root, e.g. `https://sentanalysis.vercel.app/`.
+- Test the API directly:
+  ```powershell
+  Invoke-WebRequest -Uri https://sentanalysis.vercel.app/api/sentiment -Method POST `
+    -Body (@{text="I love this!"} | ConvertTo-Json) `
+    -ContentType "application/json"
+  ```
+
 Local test with Vercel CLI (optional):
 ```powershell
 npm i -g vercel
@@ -82,5 +104,10 @@ vercel dev
 ```
 
 Extension after deploy:
-- Update `extension/manifest.json` `host_permissions` to include your production URL, e.g. `"https://<your-project>.vercel.app/*"`.
-- The extension's `popup.js` `API_URLS` can be updated to try your production URL first.
+- Ensure `extension/manifest.json` `host_permissions` includes your production URL, e.g. `"https://<your-project>.vercel.app/*"` (already includes `https://sentanalysis.vercel.app/*`).
+- The extension's `popup.js` already tries your production URL first. If you fork/rename, update the domain there.
+
+Microsoft Edge:
+- Load unpacked via edge://extensions and enable Developer mode.
+- Allow the extension on all sites and (optionally) in InPrivate.
+- If opening the popup fails, the floating button falls back to inline analysis tooltip.
