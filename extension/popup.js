@@ -23,11 +23,20 @@ async function callApi(text) {
 async function getSelectionFromActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) return "";
-  const [{ result }] = await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: () => window.getSelection ? String(window.getSelection()) : ""
-  });
-  return result || "";
+  const url = tab.url || "";
+  const blocked = url.startsWith("chrome://") || url.startsWith("edge://") || url.startsWith("about:") || url.startsWith("chrome-extension://");
+  if (blocked) {
+    throw new Error("Cannot access chrome:// or similar pages. Open a normal webpage.");
+  }
+  try {
+    const [exec] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => (window.getSelection ? String(window.getSelection()) : "")
+    });
+    return (exec && exec.result) || "";
+  } catch (e) {
+    throw new Error("Unable to read selection on this page.");
+  }
 }
 
 function showStatus(msg, isError=false) {
@@ -65,5 +74,13 @@ window.addEventListener("DOMContentLoaded", () => {
     const text = await getSelectionFromActiveTab();
     if (text) input.value = text;
     analyze(input.value);
+  });
+
+  // Prefill from background when opened via floating button
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg?.type === "POPUP_PREFILL" && typeof msg.text === "string") {
+      input.value = msg.text;
+      analyze(input.value);
+    }
   });
 });

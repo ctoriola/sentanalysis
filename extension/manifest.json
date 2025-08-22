@@ -3,14 +3,25 @@
   "name": "Sentiment Analyzer",
   "version": "1.0.0",
   "description": "Analyze sentiment of selected or typed text using a local Flask API.",
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_title": "Sentiment Analyzer",
     "default_popup": "popup.html"
   },
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting", "tabs"],
   "host_permissions": [
     "https://sentanalysis.vercel.app/*",
     "http://127.0.0.1:5000/*",
     "http://localhost:5000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
   ]
 }
